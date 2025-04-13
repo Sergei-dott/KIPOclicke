@@ -1,4 +1,4 @@
-html,
+/*html,
 body {
   margin: 0;
   height: 100%;
@@ -37,7 +37,7 @@ body {
 .circle img {
   width: 250px;
   height: 250px;
-  border-radius: 50%; /*fdsg*/
+  border-radius: 50%; /*fdsg*//*
   box-shadow: 0px 0px 16px 0px rgba(254, 173, 138, 0.05);
   transition: transform 0.2s ease;
   --tiltX: 0deg;
@@ -70,4 +70,4 @@ body {
     opacity: 0;
     transform: translateY(-50px);
   }
-}
+}*/
