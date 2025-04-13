@@ -1,135 +1,236 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KIPO clicker</title>
-    <link rel="stylesheet" href="styles.css" /> <!--dsddffhgfhhhhhhhhssssssssssssssssssssssssssssssssss-->
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Криптокликер</title>
     <style>
         :root {
             --bg-dark: #1A1A1A;
             --bg-panel: #262626;
             --accent-orange: #FF6B00;
             --accent-light: #FF8C42;
+            --accent-dark: #E65100;
             --text-light: #FFFFFF;
             --text-gray: #CCCCCC;
+            --tab-orange: #E65100;
+            --tab-active: #FF6B00;
         }
-        
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
-        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-light);
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        .wallet-fab {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            background-color: var(--accent-orange);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.3s ease;
-        }
-        
-        .wallet-fab:hover {
-            background-color: var(--accent-light);
-            transform: scale(1.1);
-        }
-        
-        .wallet-fab.connected {
-            background-color: rgba(255, 107, 0, 0.2);
-            border: 2px solid var(--accent-orange);
-        }
-        
-        .wallet-icon {
-            width: 22px;
-            height: 22px;
-            fill: currentColor;
-        }
-        
-        .wallet-panel {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--bg-panel);
-            z-index: 999;
-            padding: 20px;
-            transform: translateY(100%);
-            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
+            -webkit-tap-highlight-color: transparent;
         }
-        
-        .wallet-panel.active {
-            transform: translateY(0);
-        }
-        
-        .wallet-header {
+        .game-container {
+            flex: 1;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
-            margin-bottom: 20px;
-            padding-top: 10px;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
         }
-        
-        .wallet-logo {
-            width: 70px;
-            height: 70px;
-            object-fit: contain;
-            margin: 10px auto;
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
         }
-        
-        .wallet-status {
-            background-color: rgba(255, 107, 0, 0.1);
-            padding: 15px;
-            border-radius: 12px;
-            margin: 15px 0;
-            word-break: break-all;
+        .header img {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+        .score {
+            color: var(--text-light);
+            font-size: 28px;
+            font-weight: 800;
+        }
+        .circle {
+            position: relative;
+            margin-bottom: 30px;
+        }
+        .circle img {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 107, 0, 0.2);
+            transition: transform 0.3s ease;
+            --tiltX: 0deg;
+            --tiltY: 0deg;
+            transform: rotateX(var(--tiltX)) rotateY(var(--tiltY));
+        }
+        .plus-one {
+            position: absolute;
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(180deg, #e8c547 0%, #ef882b 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            pointer-events: none;
+            user-select: none;
+            animation: move-up 2s forwards;
+        }
+        @keyframes move-up {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+
+        /* Новый стиль для вкладок (на всю ширину) */
+        .tabs-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            z-index: 100;
+            background-color: var(--bg-panel);
+            border-top: 1px solid #333;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 0;
+            border: none;
+            background-color: var(--tab-orange);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 60px;
+        }
+        .tab-btn.active {
+            background-color: var(--tab-active);
+            box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: transparent;
+            transition: background-color 0.3s;
+        }
+        .tab-btn.active::after {
+            background-color: var(--accent-light);
+        }
+        .tab-icon {
+            font-size: 24px;
+            margin-bottom: 3px;
+        }
+        .tab-label {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Стили для всплывающих панелей */
+        .tab-panel {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            max-height: 60vh;
+            background-color: var(--bg-panel);
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            z-index: 99;
+            display: none;
+            overflow-y: auto;
+            animation: slide-up 0.3s ease-out;
+        }
+        @keyframes slide-up {
+            from { opacity: 0; transform: translate(-50%, 20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        .tab-panel.active {
+            display: block;
+        }
+        .close-panel {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: var(--text-gray);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Остальные стили */
+        .profile-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-label {
+            margin-bottom: 5px;
             font-size: 14px;
+            color: var(--text-gray);
         }
-        
-        .wallet-address {
-            color: var(--accent-orange);
-            font-weight: 600;
-            margin-top: 8px;
-            font-size: 15px;
-        }
-        
-        .wallet-input {
-            width: 100%;
-            padding: 14px;
+        .form-input {
+            padding: 12px;
             border-radius: 12px;
             border: 1px solid #444;
             background-color: #333;
             color: white;
-            margin: 8px 0;
             font-size: 16px;
         }
-        
-        .wallet-input:focus {
+        .form-input:focus {
             outline: none;
             border-color: var(--accent-orange);
         }
-        
+        .balance-info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: rgba(255, 107, 0, 0.1);
+            border-radius: 12px;
+        }
+        .balance-title {
+            font-size: 16px;
+            color: var(--text-gray);
+            margin-bottom: 5px;
+        }
+        .balance-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-orange);
+        }
+        .bonus-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .bonus-table th, .bonus-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+        .bonus-table th {
+            color: var(--accent-orange);
+            font-weight: 500;
+        }
         .wallet-btn {
             width: 100%;
             padding: 16px;
@@ -141,309 +242,421 @@
             margin-top: 12px;
             font-size: 16px;
         }
-        
         .connect-btn {
             background-color: var(--accent-orange);
             color: white;
         }
-        
         .connect-btn:active {
-            background-color: var(--accent-light);
+            background-color: var(--accent-dark);
             transform: scale(0.98);
         }
-        
         .disconnect-btn {
             background-color: transparent;
             color: var(--accent-orange);
             border: 2px solid var(--accent-orange);
         }
-        
         .disconnect-btn:active {
             background-color: rgba(255, 107, 0, 0.1);
         }
-        
         .manual-connect-btn {
             background-color: #333;
             color: var(--accent-orange);
             border: 2px solid var(--accent-orange);
         }
-        
         .manual-connect-btn:active {
             background-color: #3a3a3a;
         }
-        
-        .close-btn {
-            background: none;
-            border: none;
-            color: var(--text-gray);
-            font-size: 28px;
-            cursor: pointer;
-            padding: 5px;
+        .save-btn {
+            background-color: #ffa600;
+            color: white;
         }
-        
+        .save-btn:active {
+            background-color: #ffd000;
+            transform: scale(0.98);
+        }
         .hidden {
             display: none;
         }
-        
-        .tab-buttons {
-            display: flex;
-            margin-bottom: 15px;
-            background: #333;
-            border-radius: 12px;
-            padding: 4px;
-        }
-        
-        .tab-btn {
-            flex: 1;
-            padding: 12px;
-            background: transparent;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            border-radius: 8px;
-        }
-        
-        .tab-btn.active {
-            background: var(--accent-orange);
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.3s ease-out;
-        }
-        
         @media (max-width: 350px) {
-            .wallet-fab {
-                width: 46px;
-                height: 46px;
-                top: 15px;
-                right: 15px;
+            .circle img {
+                width: 180px;
+                height: 180px;
             }
-            
-            .wallet-icon {
-                width: 20px;
-                height: 20px;
+            .tab-icon {
+                font-size: 22px;
+            }
+            .tab-label {
+                font-size: 11px;
             }
         }
     </style>
-  </head><!-- jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj-->
-  <body> 
-    <div class="game">
-      <div class="header">
-        <img src="./assets/cooin.png" alt="coin" />
-        <h2 class="score" id="score">42</h2>
-      </div>
-      <div class="circle">
-        <img id="circle" src="./assets/CryptoE.png" alt="frog" /> 
-      </div>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <img src="./assets/cooin.png" alt="coin">
+            <div class="score" id="score">0</div>
+        </div>
+        <div class="circle">
+            <img id="circle" src="./assets/CryptoE.png" alt="Криптокошелек">
+        </div>
     </div>
-    <script src="app.js" defer></script> <!--hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh-->
-     <!-- Кнопка в правом верхнем углу -->
-    <button id="walletFab" class="wallet-fab" aria-label="Кошелек">
-        <svg class="wallet-icon" viewBox="0 0 24 24">
-            <path d="M5 3C3.89 3 3 3.9 3 5V19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V16.72C21.59 16.37 22 15.74 22 15V9C22 8.26 21.59 7.63 21 7.28V5C21 3.9 20.1 3 19 3H5M5 5H19V7H13C11.9 7 11 7.9 11 9V15C11 16.1 11.9 17 13 17H19V19H5V5M19 9V15H13V9H19M16 10.5A1.5 1.5 0 0 0 14.5 12A1.5 1.5 0 0 0 16 13.5A1.5 1.5 0 0 0 17.5 12A1.5 1.5 0 0 0 16 10.5Z"/>
-        </svg>
-    </button>
-    
-    <!-- Панель кошелька -->
-    <div id="walletPanel" class="wallet-panel">
-        <div class="wallet-header">
-            <h2 style="margin: 0; font-size: 20px;">Управление кошельком</h2>
-            <button id="closeWalletPanel" class="close-btn" aria-label="Закрыть">&times;</button>
+
+    <!-- Кнопки вкладок -->
+    <div class="tabs-container">
+        <button class="tab-btn" data-tab="wallet">
+            <span class="material-icons tab-icon">account_balance_wallet</span>
+            <span class="tab-label">Кошелек</span>
+        </button>
+        <button class="tab-btn" data-tab="profile">
+            <span class="material-icons tab-icon">person</span>
+            <span class="tab-label">Профиль</span>
+        </button>
+    </div>
+
+    <!-- Всплывающая панель кошелька -->
+    <div id="walletPanel" class="tab-panel">
+        <button class="close-panel">&times;</button>
+        <h2 style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-icons">account_balance_wallet</span>
+            <span>Криптокошелек</span>
+        </h2>
+        <div class="wallet-status">
+            <p id="walletStatusText">Кошелек не подключен</p>
+            <p id="walletAddress" class="hidden"></p>
         </div>
-        
-        <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" alt="Ethereum" class="wallet-logo fade-in">
-        
-        <div class="tab-buttons">
-            <button class="tab-btn active" data-tab="auto">Авто</button>
-            <button class="tab-btn" data-tab="manual">Вручную</button>
+        <button id="connectWalletBtn" class="wallet-btn connect-btn">
+            <span class="material-icons" style="vertical-align: middle; margin-right: 5px;">link</span>
+            Подключить
+        </button>
+        <button id="disconnectWalletBtn" class="wallet-btn disconnect-btn hidden">
+            <span class="material-icons" style="vertical-align: middle; margin-right: 5px;">link_off</span>
+            Отключить
+        </button>
+        <div style="margin-top: 20px;">
+            <input type="text" id="manualWalletInput" class="form-input" placeholder="Введите 0x адрес">
+            <button id="pasteAddressBtn" class="wallet-btn manual-connect-btn" style="margin-top: 10px;">
+                <span class="material-icons" style="vertical-align: middle; margin-right: 5px;">content_paste</span>
+                Вставить адрес
+            </button>
+            <button id="saveManualWalletBtn" class="wallet-btn connect-btn" style="margin-top: 10px;">
+                <span class="material-icons" style="vertical-align: middle; margin-right: 5px;">save</span>
+                Сохранить
+            </button>
         </div>
-        
-        <div id="autoTab" class="tab-content active">
-            <div id="walletStatus" class="wallet-status">
-                <p id="walletStatusText">Кошелек не подключен</p>
-                <p id="walletAddress" class="wallet-address hidden"></p>
+    </div>
+
+    <!-- Всплывающая панель профиля -->
+    <div id="profilePanel" class="tab-panel">
+        <button class="close-panel">&times;</button>
+        <h2 style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-icons">person</span>
+            <span>Профиль</span>
+        </h2>
+        <form class="profile-form">
+            <div class="form-group">
+                <label class="form-label">Имя</label>
+                <input type="text" id="firstName" class="form-input" placeholder="Введите ваше имя">
             </div>
-            
-            <button id="connectWalletBtn" class="wallet-btn connect-btn">Подключить</button>
-            <button id="disconnectWalletBtn" class="wallet-btn disconnect-btn hidden">Отключить</button>
+            <div class="form-group">
+                <label class="form-label">Фамилия</label>
+                <input type="text" id="lastName" class="form-input" placeholder="Введите вашу фамилию">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Отчество</label>
+                <input type="text" id="middleName" class="form-input" placeholder="Введите ваше отчество">
+            </div>
+            <button type="button" id="saveProfileBtn" class="wallet-btn save-btn">
+                <span class="material-icons" style="vertical-align: middle; margin-right: 5px;">save</span>
+                Сохранить профиль
+            </button>
+        </form>
+        <div class="balance-info">
+            <div class="balance-title">Ваш баланс</div>
+            <div class="balance-value" id="totalBalance">0 монет</div>
         </div>
-        
-        <div id="manualTab" class="tab-content">
-            <input type="text" id="manualWalletInput" class="wallet-input" placeholder="Введите 0x адрес" inputmode="text">
-            <button id="pasteAddressBtn" class="wallet-btn manual-connect-btn">Вставить адрес</button>
-            <button id="saveManualWalletBtn" class="wallet-btn connect-btn">Сохранить</button>
-        </div>
+        <table class="bonus-table">
+            <thead>
+                <tr>
+                    <th>Количество монет</th>
+                    <th>Бонус к аттестату</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>100 000+</td>
+                    <td>0.3 балла</td>
+                </tr>
+                <tr>
+                    <td>50 000 - 100 000</td>
+                    <td>0.2 балла</td>
+                </tr>
+                <tr>
+                    <td>30 000 - 50 000</td>
+                    <td>0.1 балл</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Элементы интерфейса
-            const walletFab = document.getElementById('walletFab');
-            const walletPanel = document.getElementById('walletPanel');
-            const closeWalletPanel = document.getElementById('closeWalletPanel');
-            const connectWalletBtn = document.getElementById('connectWalletBtn');
-            const disconnectWalletBtn = document.getElementById('disconnectWalletBtn');
-            const walletStatusText = document.getElementById('walletStatusText');
-            const walletAddress = document.getElementById('walletAddress');
-            const manualWalletInput = document.getElementById('manualWalletInput');
-            const pasteAddressBtn = document.getElementById('pasteAddressBtn');
-            const saveManualWalletBtn = document.getElementById('saveManualWalletBtn');
-            const tabButtons = document.querySelectorAll('.tab-btn');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            // Проверка сохраненного кошелька
-            const savedWallet = localStorage.getItem('ethereumWallet');
-            if (savedWallet) {
-                updateUI(JSON.parse(savedWallet));
+            // Элементы игры
+            const $circle = document.querySelector('#circle');
+            const $score = document.querySelector('#score');
+            const $totalBalance = document.querySelector('#totalBalance');
+
+            // Элементы профиля
+            const $firstName = document.querySelector('#firstName');
+            const $lastName = document.querySelector('#lastName');
+            const $middleName = document.querySelector('#middleName');
+            const $saveProfileBtn = document.querySelector('#saveProfileBtn');
+
+            // Элементы кошелька
+            const $connectWalletBtn = document.querySelector('#connectWalletBtn');
+            const $disconnectWalletBtn = document.querySelector('#disconnectWalletBtn');
+            const $walletStatusText = document.querySelector('#walletStatusText');
+            const $walletAddress = document.querySelector('#walletAddress');
+            const $manualWalletInput = document.querySelector('#manualWalletInput');
+            const $pasteAddressBtn = document.querySelector('#pasteAddressBtn');
+            const $saveManualWalletBtn = document.querySelector('#saveManualWalletBtn');
+
+            // Элементы вкладок
+            const $tabButtons = document.querySelectorAll('.tab-btn');
+            const $tabPanels = document.querySelectorAll('.tab-panel');
+            const $closeButtons = document.querySelectorAll('.close-panel');
+
+            // Текущая активная панель
+            let activePanel = null;
+
+            // Инициализация игры
+            function initGame() {
+                setScore(getScore());
+                updateTotalBalance();
+                loadProfile();
             }
-            
-            // Открытие/закрытие панели
-            walletFab.addEventListener('click', function() {
-                walletPanel.classList.add('active');
-                document.body.style.overflow = 'hidden';
+
+            // Функции игры
+            function setScore(score) {
+                localStorage.setItem('score', score);
+                $score.textContent = score;
+                updateTotalBalance();
+            }
+
+            function getScore() {
+                return Number(localStorage.getItem('score')) || 0;
+            }
+
+            function updateTotalBalance() {
+                const total = getTotalCoins();
+                $totalBalance.textContent = `${total} монет`;
+            }
+
+            function getTotalCoins() {
+                return Number(localStorage.getItem('totalCoins')) || getScore();
+            }
+
+            function addOne() {
+                const newScore = getScore() + 1;
+                setScore(newScore);
+                // Обновляем общее количество монет
+                const totalCoins = getTotalCoins() + 1;
+                localStorage.setItem('totalCoins', totalCoins);
+                updateTotalBalance();
+            }
+
+            // Обработчик клика по кругу
+            $circle.addEventListener('click', (event) => {
+                const rect = $circle.getBoundingClientRect();
+                const offsetX = event.clientX - rect.left - rect.width / 2;
+                const offsetY = event.clientY - rect.top - rect.height / 2;
+                const DEG = 40;
+                const tiltX = (offsetY / rect.height) * DEG;
+                const tiltY = (offsetX / rect.width) * -DEG;
+
+                $circle.style.setProperty('--tiltX', `${tiltX}deg`);
+                $circle.style.setProperty('--tiltY', `${tiltY}deg`);
+
+                setTimeout(() => {
+                    $circle.style.setProperty('--tiltX', `0deg`);
+                    $circle.style.setProperty('--tiltY', `0deg`);
+                }, 300);
+
+                const plusOne = document.createElement('div');
+                plusOne.classList.add('plus-one');
+                plusOne.textContent = '+1';
+                plusOne.style.left = `${event.clientX - rect.left}px`;
+                plusOne.style.top = `${event.clientY - rect.top}px`;
+                $circle.parentElement.appendChild(plusOne);
+
+                addOne();
+
+                setTimeout(() => {
+                    plusOne.remove();
+                }, 2000);
             });
-            
-            closeWalletPanel.addEventListener('click', function() {
-                walletPanel.classList.remove('active');
-                document.body.style.overflow = '';
-            });
-            
-            // Закрытие при клике вне панели
-            walletPanel.addEventListener('click', function(e) {
-                if (e.target === walletPanel) {
-                    walletPanel.classList.remove('active');
-                    document.body.style.overflow = '';
-                }
-            });
-            
-            // Переключение вкладок
-            tabButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const tabId = this.getAttribute('data-tab');
-                    
-                    tabButtons.forEach(b => b.classList.remove('active'));
-                    tabContents.forEach(c => c.classList.remove('active'));
-                    
-                    this.classList.add('active');
-                    document.getElementById(tabId + 'Tab').classList.add('active');
-                });
-            });
-            
-            // Автоподключение кошелька
-            connectWalletBtn.addEventListener('click', async function() {
+
+            // Функции профиля
+            function loadProfile() {
+                const profile = JSON.parse(localStorage.getItem('profile')) || {};
+                $firstName.value = profile.firstName || '';
+                $lastName.value = profile.lastName || '';
+                $middleName.value = profile.middleName || '';
+            }
+
+            function saveProfile() {
+                const profile = {
+                    firstName: $firstName.value.trim(),
+                    lastName: $lastName.value.trim(),
+                    middleName: $middleName.value.trim()
+                };
+                localStorage.setItem('profile', JSON.stringify(profile));
+                showAlert('Профиль сохранен!', 'success');
+            }
+
+            $saveProfileBtn.addEventListener('click', saveProfile);
+
+            // Функции кошелька
+            function connectWallet() {
                 if (window.ethereum) {
-                    try {
-                        connectWalletBtn.textContent = 'Подключение...';
-                        const accounts = await window.ethereum.request({ 
-                            method: 'eth_requestAccounts' 
+                    $connectWalletBtn.textContent = 'Подключение...';
+                    window.ethereum.request({ method: 'eth_requestAccounts' })
+                        .then(accounts => {
+                            const walletData = {
+                                address: accounts[0],
+                                connectedAt: new Date().toISOString()
+                            };
+                            localStorage.setItem('wallet', JSON.stringify(walletData));
+                            updateWalletUI(walletData);
+                            $walletStatusText.textContent = 'Успешное подключение!';
+                        })
+                        .catch(error => {
+                            console.error('Ошибка подключения:', error);
+                            $walletStatusText.textContent = 'Подключение отменено';
+                        })
+                        .finally(() => {
+                            $connectWalletBtn.innerHTML = '<span class="material-icons" style="vertical-align: middle; margin-right: 5px;">link</span>Подключить';
                         });
-                        
-                        const walletData = {
-                            address: accounts[0],
-                            connectedAt: new Date().toISOString(),
-                            type: 'auto'
-                        };
-                        
-                        localStorage.setItem('ethereumWallet', JSON.stringify(walletData));
-                        updateUI(walletData);
-                        walletStatusText.textContent = 'Успешное подключение!';
-                    } catch (error) {
-                        console.error('Ошибка подключения:', error);
-                        walletStatusText.textContent = 'Подключение отменено';
-                    } finally {
-                        connectWalletBtn.textContent = 'Подключить';
-                    }
                 } else {
-                    walletStatusText.innerHTML = 'Не найден кошелек. Установите <a href="https://metamask.io/" style="color: var(--accent-orange); text-decoration: underline;">MetaMask</a>';
+                    $walletStatusText.textContent = 'Установите MetaMask или другой кошелек';
                 }
-            });
-            
-            // Вставка адреса из буфера
-            pasteAddressBtn.addEventListener('click', async function() {
-                try {
-                    const text = await navigator.clipboard.readText();
-                    manualWalletInput.value = text;
-                    manualWalletInput.focus();
-                } catch (err) {
-                    alert('Не удалось вставить адрес. Разрешите доступ к буферу обмена.');
+            }
+
+            function disconnectWallet() {
+                localStorage.removeItem('wallet');
+                resetWalletUI();
+                $walletStatusText.textContent = 'Кошелек отключен';
+            }
+
+            function updateWalletUI(walletData) {
+                const shortAddress = `${walletData.address.substring(0, 6)}...${walletData.address.substring(walletData.address.length - 4)}`;
+                $walletAddress.textContent = shortAddress;
+                $walletAddress.classList.remove('hidden');
+                $connectWalletBtn.classList.add('hidden');
+                $disconnectWalletBtn.classList.remove('hidden');
+            }
+
+            function resetWalletUI() {
+                $walletAddress.textContent = '';
+                $walletAddress.classList.add('hidden');
+                $connectWalletBtn.classList.remove('hidden');
+                $disconnectWalletBtn.classList.add('hidden');
+            }
+
+            function checkSavedWallet() {
+                const savedWallet = localStorage.getItem('wallet');
+                if (savedWallet) {
+                    updateWalletUI(JSON.parse(savedWallet));
                 }
-            });
-            
-            // Сохранение адреса вручную
-            saveManualWalletBtn.addEventListener('click', function() {
-                const address = manualWalletInput.value.trim();
-                
+            }
+
+            $connectWalletBtn.addEventListener('click', connectWallet);
+            $disconnectWalletBtn.addEventListener('click', disconnectWallet);
+
+            // Ручное сохранение кошелька
+            $saveManualWalletBtn.addEventListener('click', function() {
+                const address = $manualWalletInput.value.trim();
                 if (!address) {
                     showAlert('Введите адрес кошелька!');
                     return;
                 }
-                
                 if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-                    showAlert('Неверный формат адреса! Должен начинаться с 0x и содержать 40 символов.');
+                    showAlert('Неверный формат адреса!');
                     return;
                 }
-                
+
                 const walletData = {
                     address: address,
                     connectedAt: new Date().toISOString(),
                     type: 'manual'
                 };
-                
-                localStorage.setItem('ethereumWallet', JSON.stringify(walletData));
-                updateUI(walletData);
-                manualWalletInput.value = '';
-                showAlert('Кошелек успешно сохранен!', 'success');
+                localStorage.setItem('wallet', JSON.stringify(walletData));
+                updateWalletUI(walletData);
+                $manualWalletInput.value = '';
+                showAlert('Кошелек сохранен!', 'success');
             });
-            
-            // Отключение кошелька
-            disconnectWalletBtn.addEventListener('click', function() {
-                localStorage.removeItem('ethereumWallet');
-                resetUI();
-                showAlert('Кошелек отключен', 'info');
+
+            // Вставка адреса из буфера
+            $pasteAddressBtn.addEventListener('click', async function() {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    $manualWalletInput.value = text;
+                } catch (err) {
+                    showAlert('Не удалось вставить адрес. Разрешите доступ к буферу обмена.');
+                }
             });
-            
-            // Обновление интерфейса
-            function updateUI(walletData) {
-                const shortAddress = `${walletData.address.substring(0, 6)}...${walletData.address.substring(walletData.address.length - 4)}`;
-                
-                walletStatusText.textContent = 'Подключен кошелек:';
-                walletAddress.textContent = shortAddress;
-                walletAddress.classList.remove('hidden');
-                connectWalletBtn.classList.add('hidden');
-                disconnectWalletBtn.classList.remove('hidden');
-                
-                walletFab.classList.add('connected');
-                walletFab.title = shortAddress;
+
+            // Управление вкладками
+            function openPanel(panelId) {
+                // Закрываем текущую панель, если есть
+                if (activePanel) {
+                    activePanel.classList.remove('active');
+                    document.querySelector(`.tab-btn[data-tab="${activePanel.id.replace('Panel', '')}"]`).classList.remove('active');
+                }
+
+                // Открываем новую панель
+                const panel = document.getElementById(panelId);
+                panel.classList.add('active');
+                document.querySelector(`.tab-btn[data-tab="${panelId.replace('Panel', '')}"]`).classList.add('active');
+                activePanel = panel;
             }
-            
-            // Сброс интерфейса
-            function resetUI() {
-                walletStatusText.textContent = 'Кошелек не подключен';
-                walletAddress.textContent = '';
-                walletAddress.classList.add('hidden');
-                connectWalletBtn.classList.remove('hidden');
-                disconnectWalletBtn.classList.add('hidden');
-                
-                walletFab.classList.remove('connected');
-                walletFab.title = 'Кошелек';
+
+            function closeAllPanels() {
+                $tabPanels.forEach(panel => panel.classList.remove('active'));
+                $tabButtons.forEach(btn => btn.classList.remove('active'));
+                activePanel = null;
             }
-            
-            // Всплывающее уведомление
+
+            // Обработчики для кнопок вкладок
+            $tabButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    const panelId = `${tabId}Panel`;
+                    if (activePanel && activePanel.id === panelId) {
+                        closeAllPanels();
+                    } else {
+                        openPanel(panelId);
+                    }
+                });
+            });
+
+            // Обработчики для кнопок закрытия
+            $closeButtons.forEach(btn => {
+                btn.addEventListener('click', closeAllPanels);
+            });
+
+            // Закрытие при клике вне панели
+            document.addEventListener('click', function(e) {
+                if (activePanel && !activePanel.contains(e.target)) {
+                    const isTabButton = Array.from($tabButtons).some(btn => btn.contains(e.target));
+                    if (!isTabButton) {
+                        closeAllPanels();
+                    }
+                }
+            });
+
+            // Всплывающие уведомления
             function showAlert(message, type = 'error') {
                 const alert = document.createElement('div');
                 alert.textContent = message;
@@ -459,32 +672,33 @@
                 alert.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
                 alert.style.animation = 'fadeIn 0.3s ease-out';
                 document.body.appendChild(alert);
-                
+
                 setTimeout(() => {
                     alert.style.animation = 'fadeIn 0.3s ease-out reverse';
                     setTimeout(() => alert.remove(), 300);
                 }, 3000);
             }
-            
-            // Отслеживание смены аккаунта
+
+            // Инициализация
+            initGame();
+            checkSavedWallet();
+
+            // Отслеживание изменений аккаунта
             if (window.ethereum) {
                 window.ethereum.on('accountsChanged', (accounts) => {
                     if (accounts.length === 0) {
-                        localStorage.removeItem('ethereumWallet');
-                        resetUI();
-                        showAlert('Кошелек отключен', 'info');
+                        disconnectWallet();
                     } else {
                         const walletData = {
                             address: accounts[0],
                             connectedAt: new Date().toISOString()
                         };
-                        localStorage.setItem('ethereumWallet', JSON.stringify(walletData));
-                        updateUI(walletData);
-                        showAlert('Аккаунт изменен', 'info');
+                        localStorage.setItem('wallet', JSON.stringify(walletData));
+                        updateWalletUI(walletData);
                     }
                 });
             }
         });
     </script>
-  </body><!--ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd-->
+</body>
 </html>
