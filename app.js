@@ -1,4 +1,4 @@
-const $circle = document.querySelector('#circle')
+/*const $circle = document.querySelector('#circle')
 const $score = document.querySelector('#score')
 
 function start() {
@@ -60,4 +60,4 @@ $circle.addEventListener('click', (event) => {
   }, 2000)
 })
 
-start()
+start()*/
