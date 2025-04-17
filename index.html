@@ -173,34 +173,39 @@
             cursor: pointer;
         }
 
-        /* Остальные стили */
-        .profile-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+        /* Стили для поля ввода адреса кошелька */
+        .wallet-input-container {
             margin-top: 20px;
+            position: relative;
         }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-        .form-label {
-            margin-bottom: 5px;
+        .wallet-input-label {
+            display: block;
+            margin-bottom: 8px;
             font-size: 14px;
             color: var(--text-gray);
         }
-        .form-input {
-            padding: 12px;
+        .wallet-input {
+            width: 100%;
+            padding: 14px 15px;
             border-radius: 12px;
             border: 1px solid #444;
             background-color: #333;
             color: white;
             font-size: 16px;
+            font-family: monospace;
+            transition: all 0.3s;
         }
-        .form-input:focus {
+        .wallet-input:focus {
             outline: none;
             border-color: var(--accent-orange);
+            box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.2);
         }
+        .wallet-input::placeholder {
+            color: #666;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        /* Остальные стили */
         .balance-info {
             margin: 20px 0;
             padding: 15px;
@@ -217,20 +222,110 @@
             font-weight: 700;
             color: var(--accent-orange);
         }
-        .bonus-table {
+        
+        /* Стили для прогресс-бара */
+        .progress-container {
+            margin-top: 20px;
+        }
+        .progress-title {
+            font-size: 14px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #333;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF6B00, #FF8C42);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, 
+                        rgba(255,255,255,0.1) 0%, 
+                        rgba(255,255,255,0.3) 50%, 
+                        rgba(255,255,255,0.1) 100%);
+            background-size: 200% 100%;
+            animation: shine 2s infinite;
+        }
+        @keyframes shine {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Стили для таблицы наград */
+        .rewards-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            background-color: var(--bg-panel);
+            border-radius: 12px;
+            overflow: hidden;
         }
-        .bonus-table th, .bonus-table td {
-            padding: 12px;
+        .rewards-table th, .rewards-table td {
+            padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #444;
         }
-        .bonus-table th {
+        .rewards-table th {
+            background-color: #333;
             color: var(--accent-orange);
             font-weight: 500;
         }
+        .rewards-table tr:last-child td {
+            border-bottom: none;
+        }
+        .rewards-table tr:hover {
+            background-color: #333;
+        }
+        .reward-achieved {
+            color: var(--accent-orange);
+            font-weight: 600;
+        }
+        
+        /* Стили для третьей вкладки с картинками */
+        .links-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .link-card {
+            display: block;
+            text-decoration: none;
+            color: var(--text-light);
+            transition: transform 0.2s;
+        }
+        .link-card:active {
+            transform: scale(0.98);
+        }
+        .link-image {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid #444;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .link-title {
+            margin-top: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            text-align: center;
+            color: var(--accent-orange);
+        }
+        
         .wallet-btn {
             width: 100%;
             padding: 16px;
@@ -257,14 +352,6 @@
         }
         .disconnect-btn:active {
             background-color: rgba(255, 107, 0, 0.1);
-        }
-        .manual-connect-btn {
-            background-color: #333;
-            color: var(--accent-orange);
-            border: 2px solid var(--accent-orange);
-        }
-        .manual-connect-btn:active {
-            background-color: #3a3a3a;
         }
         .save-btn {
             background-color: #ffa600;
@@ -310,8 +397,12 @@
             <span class="tab-label">Кошелек</span>
         </button>
         <button class="tab-btn" data-tab="profile">
-            <span class="material-icons tab-icon">person</span>
-            <span class="tab-label">Профиль</span>
+            <span class="material-icons tab-icon">emoji_events</span>
+            <span class="tab-label">Награды</span>
+        </button>
+        <button class="tab-btn" data-tab="links">
+            <span class="material-icons tab-icon">link</span>
+            <span class="tab-label">Ссылки</span>
         </button>
     </div>
 
@@ -334,70 +425,87 @@
             <span class="material-icons" style="vertical-align: middle; margin-right: 5px;">link_off</span>
             Отключить
         </button>
-        <div style="margin-top: 20px;">
-            <input type="text" id="manualWalletInput" class="form-input" placeholder="Введите 0x адрес">
-            <button id="pasteAddressBtn" class="wallet-btn manual-connect-btn" style="margin-top: 10px;">
-                <span class="material-icons" style="vertical-align: middle; margin-right: 5px;">content_paste</span>
-                Вставить адрес
-            </button>
+        
+        <div class="wallet-input-container">
+            <label for="manualWalletInput" class="wallet-input-label">Или введите адрес вручную:</label>
+            <input type="text" id="manualWalletInput" class="wallet-input" placeholder="0x...">
             <button id="saveManualWalletBtn" class="wallet-btn connect-btn" style="margin-top: 10px;">
                 <span class="material-icons" style="vertical-align: middle; margin-right: 5px;">save</span>
-                Сохранить
+                Сохранить адрес
             </button>
         </div>
     </div>
 
-    <!-- Всплывающая панель профиля -->
+    <!-- Всплывающая панель наград -->
     <div id="profilePanel" class="tab-panel">
         <button class="close-panel">&times;</button>
         <h2 style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-            <span class="material-icons">person</span>
-            <span>Профиль</span>
+            <span class="material-icons">emoji_events</span>
+            <span>Ваши награды</span>
         </h2>
-        <form class="profile-form">
-            <div class="form-group">
-                <label class="form-label">Имя</label>
-                <input type="text" id="firstName" class="form-input" placeholder="Введите ваше имя">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Фамилия</label>
-                <input type="text" id="lastName" class="form-input" placeholder="Введите вашу фамилию">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Отчество</label>
-                <input type="text" id="middleName" class="form-input" placeholder="Введите ваше отчество">
-            </div>
-            <button type="button" id="saveProfileBtn" class="wallet-btn save-btn">
-                <span class="material-icons" style="vertical-align: middle; margin-right: 5px;">save</span>
-                Сохранить профиль
-            </button>
-        </form>
+        
         <div class="balance-info">
             <div class="balance-title">Ваш баланс</div>
             <div class="balance-value" id="totalBalance">0 монет</div>
         </div>
-        <table class="bonus-table">
+        
+        <div class="progress-container">
+            <div class="progress-title">
+                <span>Прогресс до следующей награды</span>
+                <span id="progressValue">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <table class="rewards-table">
             <thead>
                 <tr>
                     <th>Количество монет</th>
-                    <th>Бонус к аттестату</th>
+                    <th>Награда</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>100 000+</td>
-                    <td>0.3 балла</td>
-                </tr>
-                <tr>
-                    <td>50 000 - 100 000</td>
-                    <td>0.2 балла</td>
-                </tr>
-                <tr>
+                <tr id="reward1">
                     <td>30 000 - 50 000</td>
-                    <td>0.1 балл</td>
+                    <td>0.1 балла к аттестату</td>
+                </tr>
+                <tr id="reward2">
+                    <td>50 000 - 100 000</td>
+                    <td>0.2 балла к аттестату</td>
+                </tr>
+                <tr id="reward3">
+                    <td>100 000+</td>
+                    <td>0.3 балла к аттестату</td>
+                </tr>
+                <tr id="reward4">
+                    <td>500 000+</td>
+                    <td>Скидка 5% на обучение</td>
                 </tr>
             </tbody>
         </table>
+    </div>
+
+    <!-- Всплывающая панель ссылок -->
+    <div id="linksPanel" class="tab-panel">
+        <button class="close-panel">&times;</button>
+        <h2 style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-icons">link</span>
+            <span>Полезные ссылки</span>
+        </h2>
+        
+        <div class="links-container">
+            <a href="https://t.me/kipokrd" target="_blank" class="link-card">
+                <img src="./assets/KIPOttt.jpg" alt="Телеграм канал" class="link-image">
+                <div class="link-title">Наша учебная жизнь</div>
+            </a>
+            
+            <a href="https://vkipo.ru/incoming/submission_documents/" target="_blank" class="link-card">
+                <img src="./assets/KIPO.jpg" alt="Сайт KIPO" class="link-image">
+                <div class="link-title">Подать документы в наше учебное учреждение</div>
+            </a>
+        </div>
     </div>
 
     <script>
@@ -407,11 +515,15 @@
             const $score = document.querySelector('#score');
             const $totalBalance = document.querySelector('#totalBalance');
 
-            // Элементы профиля
-            const $firstName = document.querySelector('#firstName');
-            const $lastName = document.querySelector('#lastName');
-            const $middleName = document.querySelector('#middleName');
-            const $saveProfileBtn = document.querySelector('#saveProfileBtn');
+            // Элементы прогресса
+            const $progressFill = document.getElementById('progressFill');
+            const $progressValue = document.getElementById('progressValue');
+            
+            // Элементы наград
+            const $reward1 = document.getElementById('reward1');
+            const $reward2 = document.getElementById('reward2');
+            const $reward3 = document.getElementById('reward3');
+            const $reward4 = document.getElementById('reward4');
 
             // Элементы кошелька
             const $connectWalletBtn = document.querySelector('#connectWalletBtn');
@@ -419,7 +531,6 @@
             const $walletStatusText = document.querySelector('#walletStatusText');
             const $walletAddress = document.querySelector('#walletAddress');
             const $manualWalletInput = document.querySelector('#manualWalletInput');
-            const $pasteAddressBtn = document.querySelector('#pasteAddressBtn');
             const $saveManualWalletBtn = document.querySelector('#saveManualWalletBtn');
 
             // Элементы вкладок
@@ -434,7 +545,8 @@
             function initGame() {
                 setScore(getScore());
                 updateTotalBalance();
-                loadProfile();
+                updateProgress();
+                updateRewards();
             }
 
             // Функции игры
@@ -442,6 +554,8 @@
                 localStorage.setItem('score', score);
                 $score.textContent = score;
                 updateTotalBalance();
+                updateProgress();
+                updateRewards();
             }
 
             function getScore() {
@@ -464,6 +578,58 @@
                 const totalCoins = getTotalCoins() + 1;
                 localStorage.setItem('totalCoins', totalCoins);
                 updateTotalBalance();
+            }
+            
+            // Обновление прогресс-бара
+            function updateProgress() {
+                const totalCoins = getTotalCoins();
+                let progress = 0;
+                let nextMilestone = 30000;
+                
+                if (totalCoins < 30000) {
+                    progress = totalCoins / 30000 * 100;
+                    nextMilestone = 30000;
+                } else if (totalCoins < 50000) {
+                    progress = (totalCoins - 30000) / 20000 * 100;
+                    nextMilestone = 50000;
+                } else if (totalCoins < 100000) {
+                    progress = (totalCoins - 50000) / 50000 * 100;
+                    nextMilestone = 100000;
+                } else if (totalCoins < 500000) {
+                    progress = (totalCoins - 100000) / 400000 * 100;
+                    nextMilestone = 500000;
+                } else {
+                    progress = 100;
+                    nextMilestone = "максимум";
+                }
+                
+                $progressFill.style.width = `${progress}%`;
+                $progressValue.textContent = `${Math.round(progress)}%`;
+            }
+            
+            // Обновление статуса наград
+            function updateRewards() {
+                const totalCoins = getTotalCoins();
+                
+                // Сброс всех классов
+                $reward1.classList.remove('reward-achieved');
+                $reward2.classList.remove('reward-achieved');
+                $reward3.classList.remove('reward-achieved');
+                $reward4.classList.remove('reward-achieved');
+                
+                // Проверка достижений
+                if (totalCoins >= 30000) {
+                    $reward1.classList.add('reward-achieved');
+                }
+                if (totalCoins >= 50000) {
+                    $reward2.classList.add('reward-achieved');
+                }
+                if (totalCoins >= 100000) {
+                    $reward3.classList.add('reward-achieved');
+                }
+                if (totalCoins >= 500000) {
+                    $reward4.classList.add('reward-achieved');
+                }
             }
 
             // Обработчик клика по кругу
@@ -496,26 +662,6 @@
                     plusOne.remove();
                 }, 2000);
             });
-
-            // Функции профиля
-            function loadProfile() {
-                const profile = JSON.parse(localStorage.getItem('profile')) || {};
-                $firstName.value = profile.firstName || '';
-                $lastName.value = profile.lastName || '';
-                $middleName.value = profile.middleName || '';
-            }
-
-            function saveProfile() {
-                const profile = {
-                    firstName: $firstName.value.trim(),
-                    lastName: $lastName.value.trim(),
-                    middleName: $middleName.value.trim()
-                };
-                localStorage.setItem('profile', JSON.stringify(profile));
-                showAlert('Профиль сохранен!', 'success');
-            }
-
-            $saveProfileBtn.addEventListener('click', saveProfile);
 
             // Функции кошелька
             function connectWallet() {
@@ -595,16 +741,6 @@
                 updateWalletUI(walletData);
                 $manualWalletInput.value = '';
                 showAlert('Кошелек сохранен!', 'success');
-            });
-
-            // Вставка адреса из буфера
-            $pasteAddressBtn.addEventListener('click', async function() {
-                try {
-                    const text = await navigator.clipboard.readText();
-                    $manualWalletInput.value = text;
-                } catch (err) {
-                    showAlert('Не удалось вставить адрес. Разрешите доступ к буферу обмена.');
-                }
             });
 
             // Управление вкладками
