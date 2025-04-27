@@ -43,6 +43,60 @@
             display: flex;
             align-items: center;
             margin-bottom: 30px;
+            flex-direction: column;
+            width: 100%;
+        }
+        .energy-container {
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 15px;
+        }
+        .energy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .energy-title {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+        .energy-icon {
+            color: var(--accent-orange);
+            margin-right: 5px;
+        }
+        .energy-bar {
+            height: 20px;
+            background-color: #333;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .energy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-orange), var(--accent-light));
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+        .energy-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, 
+                        rgba(255,255,255,0.1) 0%, 
+                        rgba(255,255,255,0.3) 50%, 
+                        rgba(255,255,255,0.1) 100%);
+            background-size: 200% 100%;
+            animation: shine 2s infinite;
+        }
+        .score-container {
+            display: flex;
+            align-items: center;
         }
         .header img {
             width: 40px;
@@ -83,6 +137,10 @@
         @keyframes move-up {
             0% { opacity: 1; transform: translateY(0); }
             100% { opacity: 0; transform: translateY(-50px); }
+        }
+        @keyframes pulse {
+            0% { opacity: 0.7; box-shadow: 0 0 5px rgba(255, 107, 0, 0.5); }
+            100% { opacity: 1; box-shadow: 0 0 15px rgba(255, 107, 0, 0.8); }
         }
 
         /* Новый стиль для вкладок (на всю ширину) */
@@ -382,8 +440,22 @@
 <body>
     <div class="game-container">
         <div class="header">
-            <img src="./assets/cooin.png" alt="coin">
-            <div class="score" id="score">0</div>
+            <div class="energy-container">
+                <div class="energy-header">
+                    <div class="energy-title">
+                        <span class="material-icons energy-icon">bolt</span>
+                        <span>Энергия</span>
+                    </div>
+                    <div id="energyValue">10000/10000</div>
+                </div>
+                <div class="energy-bar">
+                    <div class="energy-fill" id="energyFill" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="score-container">
+                <img src="./assets/cooin.png" alt="coin">
+                <div class="score" id="score">0</div>
+            </div>
         </div>
         <div class="circle">
             <img id="circle" src="./assets/Crypto.png" alt="Криптокошелек">
@@ -510,11 +582,21 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Константы для системы энергии
+            const MAX_ENERGY = 10000;
+            const ENERGY_RECOVERY_TIME = 30 * 60 * 1000; // 30 минут в миллисекундах
+            const ENERGY_UPDATE_INTERVAL = 1000; // Обновление каждую секунду
+            let lastEnergyUpdateTime = Date.now();
+            
             // Элементы игры
             const $circle = document.querySelector('#circle');
             const $score = document.querySelector('#score');
             const $totalBalance = document.querySelector('#totalBalance');
 
+            // Элементы энергии
+            const $energyFill = document.getElementById('energyFill');
+            const $energyValue = document.getElementById('energyValue');
+            
             // Элементы прогресса
             const $progressFill = document.getElementById('progressFill');
             const $progressValue = document.getElementById('progressValue');
@@ -540,6 +622,8 @@
 
             // Текущая активная панель
             let activePanel = null;
+            // Таймер восстановления энергии
+            let energyRecoveryTimer = null;
 
             // Инициализация игры
             function initGame() {
@@ -547,6 +631,119 @@
                 updateTotalBalance();
                 updateProgress();
                 updateRewards();
+                initEnergySystem();
+            }
+
+            // Система энергии
+            function initEnergySystem() {
+                let energy = localStorage.getItem('energy');
+                let lastEnergyUpdate = localStorage.getItem('lastEnergyUpdate');
+                
+                if (energy === null) {
+                    energy = MAX_ENERGY;
+                    localStorage.setItem('energy', energy);
+                } else {
+                    energy = parseInt(energy);
+                }
+                
+                const now = Date.now();
+                lastEnergyUpdateTime = lastEnergyUpdate ? parseInt(lastEnergyUpdate) : now;
+                
+                // Восстанавливаем энергию, если прошло время
+                const timePassed = now - lastEnergyUpdateTime;
+                const energyToRecover = Math.floor((timePassed / ENERGY_RECOVERY_TIME) * MAX_ENERGY);
+                
+                if (energyToRecover > 0) {
+                    energy = Math.min(energy + energyToRecover, MAX_ENERGY);
+                    localStorage.setItem('energy', energy);
+                    lastEnergyUpdateTime = now;
+                    localStorage.setItem('lastEnergyUpdate', now.toString());
+                }
+                
+                updateEnergyUI(energy);
+                startEnergyRecovery();
+            }
+            
+            // Новая функция для плавного восстановления энергии
+            function startEnergyRecovery() {
+                // Очищаем предыдущий интервал, если он был
+                if (energyRecoveryTimer) {
+                    clearInterval(energyRecoveryTimer);
+                }
+                
+                // Запускаем обновление энергии каждую секунду
+                energyRecoveryTimer = setInterval(() => {
+                    const currentEnergy = getCurrentEnergy();
+                    if (currentEnergy >= MAX_ENERGY) return;
+                    
+                    // Рассчитываем новое значение энергии
+                    const now = Date.now();
+                    const timePassed = now - lastEnergyUpdateTime;
+                    const newEnergy = Math.min(
+                        MAX_ENERGY,
+                        currentEnergy + (MAX_ENERGY * (timePassed / ENERGY_RECOVERY_TIME))
+                    );
+                    
+                    // Обновляем данные
+                    localStorage.setItem('energy', newEnergy);
+                    lastEnergyUpdateTime = now;
+                    localStorage.setItem('lastEnergyUpdate', now.toString());
+                    
+                    // Обновляем UI
+                    updateEnergyUI(newEnergy);
+                }, ENERGY_UPDATE_INTERVAL);
+            }
+            
+            function updateEnergyUI(energy) {
+                const percent = (energy / MAX_ENERGY) * 100;
+                $energyFill.style.width = `${percent}%`;
+                $energyValue.textContent = `${Math.floor(energy)}/${MAX_ENERGY}`;
+                
+                // Добавляем анимацию восстановления
+                $energyFill.style.transition = energy < MAX_ENERGY ? 'width 1s linear' : 'width 0.3s ease';
+                
+                // Визуальные стили для разных состояний
+                if (energy <= 0) {
+                    $energyFill.style.background = '#666';
+                    $energyFill.style.animation = 'none';
+                } else if (energy < MAX_ENERGY * 0.3) {
+                    $energyFill.style.background = `linear-gradient(90deg, var(--accent-dark), var(--accent-orange))`;
+                    $energyFill.style.animation = 'pulse 1.5s infinite alternate';
+                } else {
+                    $energyFill.style.background = `linear-gradient(90deg, var(--accent-orange), var(--accent-light))`;
+                    $energyFill.style.animation = 'none';
+                }
+            }
+            
+            function getCurrentEnergy() {
+                const savedEnergy = parseInt(localStorage.getItem('energy')) || MAX_ENERGY;
+                const lastUpdate = parseInt(localStorage.getItem('lastEnergyUpdate')) || Date.now();
+                const timePassed = Date.now() - lastUpdate;
+                
+                // Рассчитываем текущую энергию с учетом времени
+                return Math.min(
+                    MAX_ENERGY,
+                    savedEnergy + (MAX_ENERGY * (timePassed / ENERGY_RECOVERY_TIME))
+                );
+            }
+            
+            function consumeEnergy() {
+                const energy = getCurrentEnergy();
+                
+                if (energy <= 0) {
+                    const timeLeft = ENERGY_RECOVERY_TIME - (Date.now() - lastEnergyUpdateTime);
+                    showAlert(`Энергия восстановится через ${formatTime(timeLeft)}`, 'warning');
+                    return false;
+                }
+                
+                // Обновляем энергию с учетом прошедшего времени
+                const newEnergy = Math.max(0, energy - 1);
+                localStorage.setItem('energy', newEnergy);
+                lastEnergyUpdateTime = Date.now();
+                localStorage.setItem('lastEnergyUpdate', lastEnergyUpdateTime.toString());
+                
+                updateEnergyUI(newEnergy);
+                return true;
             }
 
             // Функции игры
@@ -572,6 +769,9 @@
             }
 
             function addOne() {
+                // Проверяем энергию перед кликом
+                if (!consumeEnergy()) return;
+                
                 const newScore = getScore() + 1;
                 setScore(newScore);
                 // Обновляем общее количество монет
@@ -630,6 +830,17 @@
                 if (totalCoins >= 500000) {
                     $reward4.classList.add('reward-achieved');
                 }
+            }
+
+            // Вспомогательная функция для форматирования времени
+            function formatTime(ms) {
+                const minutes = Math.ceil(ms / 60000);
+                return `${minutes} ${declension(minutes, ['минуту', 'минуты', 'минут'])}`;
+            }
+
+            function declension(number, titles) {
+                const cases = [2, 0, 1, 1, 1, 2];
+                return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
             }
 
             // Обработчик клика по кругу
@@ -802,7 +1013,7 @@
                 alert.style.transform = 'translateX(-50%)';
                 alert.style.padding = '12px 24px';
                 alert.style.borderRadius = '8px';
-                alert.style.backgroundColor = type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#2196F3';
+                alert.style.backgroundColor = type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#FF9800';
                 alert.style.color = 'white';
                 alert.style.zIndex = '1001';
                 alert.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
@@ -834,6 +1045,13 @@
                     }
                 });
             }
+            
+            // Очистка таймера при закрытии страницы
+            window.addEventListener('beforeunload', () => {
+                if (energyRecoveryTimer) {
+                    clearInterval(energyRecoveryTimer);
+                }
+            });
         });
     </script>
 </body>
